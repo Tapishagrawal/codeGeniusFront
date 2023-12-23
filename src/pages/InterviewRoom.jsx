@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { interviewEndPost, interviewGetData, interviewStartPost, interviewUpdatePatch } from "../redux/interviewReducer/action";
-
+import {  interviewEndPost, interviewGetData, interviewStartPost, interviewUpdatePatch } from "../redux/interviewReducer/action";
 import { useNavigate } from "react-router-dom";
+import { useSpeechSynthesis, useSpeechRecognition } from 'react-speech-kit';
+import { FaMicrophone } from "react-icons/fa6";
+import { FaMicrophoneSlash } from "react-icons/fa6";
 
 
 export const InterviewRoom = () => {
     const [textAreaData, setTextAreaData] = useState("");
+    const { speak, speaking } = useSpeechSynthesis();
+    const { listen, listening, stop } = useSpeechRecognition({
+        onResult: (result) => {
+            setTextAreaData(textAreaData + " " + result);
+        },
+    });
     const navigate = useNavigate()
-    const { type, data, isLoading, id, message, } = useSelector((store) => {
+    const { type, data, isLoading, id, message, newQue } = useSelector((store) => {
         return {
             type: store.interviewReducer.type,
             success: store.interviewReducer.success,
@@ -38,6 +46,9 @@ export const InterviewRoom = () => {
         }
     }, [id])
 
+    useEffect(() => {
+        speak({ text: newQue })
+    }, [newQue])
 
     return (
         <div className="mt-28 mx-2">
@@ -46,7 +57,12 @@ export const InterviewRoom = () => {
                     <div className="mb-4 text-right bg-[#3F3F46] py-4 px-4">{type} Interview</div>
                     <div className="flex w-full justify-between">
                         <div className="relative w-[49%] flex justify-center items-center bg-[#3a3348] h-[300px] rounded-lg shadow-xl shadow-indigo-700/10">
-                            
+                            {speaking &&
+                                <span className="absolute flex h-24 w-24">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-40"></span>
+                                </span>
+                            }
                             <div className="bg-red-900 w-[110px] h-[110px] flex justify-center items-center rounded-full text-4xl border-2">
                                 J
                             </div>
@@ -99,7 +115,7 @@ export const InterviewRoom = () => {
                     </div>
                     <div className="bg-transparent my-4 flex justify-between items-center">
                         <div className="bg-transparent flex gap-2 items-center">
-                            {/* {listening ?
+                            {listening ?
                                 <div className="relative">
                                     <span className="flex">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-200 opacity-75"></span>
@@ -108,12 +124,12 @@ export const InterviewRoom = () => {
                                 </div>
                                 :
                                 <span className="micOff bg-transparent text-2xl"><FaMicrophoneSlash /></span>
-                            } */}
+                            }
 
 
 
-                            <button  className="border px-4 py-1 rounded hover:bg-teal-600/40">Start</button>
-                            <button  className="border px-4 py-1 rounded hover:bg-red-600/40">Stop</button>
+                            <button onClick={() => listen()} className="border px-4 py-1 rounded hover:bg-teal-600/40">Start</button>
+                            <button onClick={() => stop()} className="border px-4 py-1 rounded hover:bg-red-600/40">Stop</button>
                         </div>
                         <div className="bg-transparent">
                             <button onClick={handleSendAnswer} className="border px-4 py-1 rounded hover:bg-green-600/40">Send</button>
